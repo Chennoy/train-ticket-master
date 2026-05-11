@@ -7,7 +7,7 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "CommonJS",
     "target": "esnext",
     // For nodejs:
     "lib": ["esnext"],
@@ -31,7 +31,6 @@
 
     // Recommended Options
     "strict": true,
-    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
