@@ -27,4 +27,5 @@ export type GraphNode = {
 export type NodeFilter = {
   kind?: NodeKind;
   publicExposed?: boolean;
+  vulnerable?: boolean;
 }
