@@ -1,4 +1,4 @@
-import type { GraphNode } from "./node";
+import type { GraphNode } from "./node/node-types";
 import type { GraphEdge, RawGraphEdge } from "./edge";
 
 export type Graph = {

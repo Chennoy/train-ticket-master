@@ -1,5 +1,5 @@
 import type { Graph } from "../models/graph";
-import type { GraphNode } from "../models/node";
+import type { GraphNode } from "../models/node/node-types";
 
 // getRootNodes returns nodes that are a head/root of a route
 export function getRootNodes(graph: Graph): GraphNode[] {

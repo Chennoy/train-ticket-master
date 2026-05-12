@@ -23,3 +23,8 @@ export type GraphNode = {
     version?: string;
   };
 };
+
+export type NodeFilter = {
+  kind?: NodeKind;
+  publicExposed?: boolean;
+}
