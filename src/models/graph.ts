@@ -4,6 +4,8 @@ import type { GraphEdge, RawGraphEdge } from "./edge";
 export type Graph = {
     nodes: GraphNode[];
     edges: GraphEdge[];
+    downstreamAdjacencyMap: Map<string, Set<string>>
+    upstreamAdjacencyMap: Map<string, Set<string>>
 };
 
 export type RawGraph = {
