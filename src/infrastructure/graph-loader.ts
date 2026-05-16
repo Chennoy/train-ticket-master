@@ -3,6 +3,7 @@ import fs from "fs";
 import type { Graph, RawGraph } from "../models/graph";
 import type { GraphEdge } from "../models/edge";
 
+// loadGraph loads a graph from a JSON file
 export function loadGraph(filePath: string): Graph {
     console.info(`Loading graph from ${filePath}`);
     try {
@@ -25,6 +26,7 @@ export function loadGraph(filePath: string): Graph {
     }
 }
 
+// normalizeEdges normalizes raw edges to the GraphEdge format
 function normalizeEdges(edges: RawGraph["edges"]): GraphEdge[] {
     return edges.map((edge) => ({
         from: edge.from,
