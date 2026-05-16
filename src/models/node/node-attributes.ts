@@ -5,10 +5,6 @@ export function isPublic(node: GraphNode): boolean {
     return node.publicExposed === true;
 }
 
-export function isSink(node: GraphNode): boolean {
-    return node.kind === "rds";
-}
-
 export function hasVulnerabilities(node: GraphNode): boolean {
     return (
         node.vulnerabilities !== undefined &&
