@@ -1,4 +1,4 @@
-import type { GraphNode } from "./node/node-types";
+import type { GraphNode, NodeKind } from "./node/node-types";
 import type { GraphEdge, RawGraphEdge } from "./edge";
 
 export type Graph = {
@@ -12,3 +12,9 @@ export type RawGraph = {
     nodes: GraphNode[];
     edges: RawGraphEdge[];
 };
+
+export type GraphQuery = {
+    sinkKind?: NodeKind;
+    publicExposed?: boolean;
+    vulnerable?: boolean;
+}

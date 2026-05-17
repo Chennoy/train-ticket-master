@@ -1,4 +1,5 @@
-import type { GraphNode, NodeFilter } from "./node-types";
+import type { GraphNode } from "./node-types";
+import type { NodeFilter } from "./node-types";
 import { hasVulnerabilities, isPublic } from "./node-attributes";
 
 // filterNodes returns nodes that match the filter criteria
