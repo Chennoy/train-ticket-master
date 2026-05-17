@@ -1,7 +1,7 @@
 import path from "path";
 
-import { loadGraph } from "./infrastructure/graph-loader";
-import { getRootNodes } from "./infrastructure/graph-query";
+import { loadGraph } from "./graph/graph-loader";
+import { getRootNodes } from "./graph/graph-query";
 
 const graphPath = path.join(
     __dirname,
