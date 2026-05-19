@@ -1,6 +1,7 @@
-import type { Graph } from "../models/graph";
+import type { Graph, GraphQuery } from "../models/graph";
 import type { GraphEdge } from "../models/edge";
 import type { GraphNode } from "../models/node/node-types";
+import { filterNodes } from "../models/node/node-filters";
 
 // getRootNodes returns nodes that are a head/root of a route
 export function getRootNodes(graph: Graph): GraphNode[] {
@@ -104,4 +105,28 @@ export function getAffectedGraph(graph: Graph, seedNodes: GraphNode[]): Graph {
         downstreamAdjacencyMap: graph.downstreamAdjacencyMap,
         upstreamAdjacencyMap: graph.upstreamAdjacencyMap
     };
+}
+
+// queryGraph returns a filtered graph based on the query
+export function queryGraph(graph: Graph, query: GraphQuery): Graph {
+    let candidates = new Set<GraphNode>();
+
+    // Add public exposed root nodes
+    if (query.publicExposed !== undefined) {
+        const rootNodes = getRootNodes(graph);
+        candidates = candidates.union(new Set(filterNodes(rootNodes, { publicExposed: query.publicExposed })));
+    }
+
+    // Add sink kind tail nodes
+    if (query.sinkKind !== undefined) {
+        const tailNodes = getTailNodes(graph);
+        candidates = candidates.union(new Set(filterNodes(tailNodes, { kind: query.sinkKind })));
+    }
+
+    // Add vulnerable nodes
+    if (query.vulnerable !== undefined) {
+        candidates = candidates.union(new Set(filterNodes(graph.nodes, { vulnerable: query.vulnerable })));
+    }
+
+    return getAffectedGraph(graph, Array.from(candidates));
 }
