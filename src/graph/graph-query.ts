@@ -109,6 +109,11 @@ export function getAffectedGraph(graph: Graph, seedNodes: GraphNode[]): Graph {
 
 // queryGraph returns a filtered graph based on the query
 export function queryGraph(graph: Graph, query: GraphQuery): Graph {
+    const hasFilters = Object.keys(query).length > 0;
+    if (!hasFilters) {
+        return graph; 
+    }
+    
     let candidates = new Set<GraphNode>();
 
     // Add public exposed root nodes
