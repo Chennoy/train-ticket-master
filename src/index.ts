@@ -1,7 +1,7 @@
 import path from "path";
 
 import { loadGraph } from "./graph/graph-loader";
-import { getRootNodes } from "./graph/graph-query";
+import { startServer } from "./server";
 
 const graphPath = path.join(
     __dirname,
@@ -10,5 +10,4 @@ const graphPath = path.join(
 );
 
 const graph = loadGraph(graphPath);
-console.log("Root nodes:", getRootNodes(graph));
-
+startServer(graph);
