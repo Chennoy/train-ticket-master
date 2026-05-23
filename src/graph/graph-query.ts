@@ -116,37 +116,6 @@ function traceRouteDirection(
     return { nodes: visitedNodes, edges: finalizedEdges };
 }
 
-// getAffectedGraph returns a filtered graph of routes passing through seed nodes
-export function getAffectedGraph(graph: Graph, seedNodes: GraphNode[]): Graph {
-    console.info(`Calculating affected routes for ${seedNodes.length} seed nodes`);
-
-    const downstreamResult = traceRouteDirection(seedNodes, graph, "downstream");
-    const upstreamResult = traceRouteDirection(seedNodes, graph, "upstream");
-
-    const affectedNodeNames = downstreamResult.nodes.union(upstreamResult.nodes);
-
-    // Combine edges and deduplicate multi-destination sets if they overlap across traces
-    const edgeAggregationMap = new Map<string, Set<string>>();
-    const allDiscoveredEdges = [...downstreamResult.edges, ...upstreamResult.edges];
-
-    for (const edge of allDiscoveredEdges) {
-        const existing = edgeAggregationMap.get(edge.from) ?? new Set<string>();
-        edge.to.forEach(target => existing.add(target));
-        edgeAggregationMap.set(edge.from, existing);
-    }
-
-    const filteredEdges: GraphEdge[] = Array.from(edgeAggregationMap.entries()).map(
-        ([from, toSet]) => ({ from, to: Array.from(toSet) })
-    );
-
-    return {
-        nodes: graph.nodes.filter(node => affectedNodeNames.has(node.name)),
-        edges: filteredEdges,
-        downstreamAdjacencyMap: graph.downstreamAdjacencyMap,
-        upstreamAdjacencyMap: graph.upstreamAdjacencyMap
-    };
-}
-
 /**
  * applyFilterTrack runs one filter pass. It finds candidate nodes that match the
  * predicate AND are allowed. Then traces from those matches in the given direction(s).
