@@ -7,7 +7,8 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "CommonJS",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "target": "esnext",
     // For nodejs:
     "lib": ["esnext"],
@@ -35,6 +36,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "esModuleInterop": true,
-  }
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
 }
