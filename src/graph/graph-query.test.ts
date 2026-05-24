@@ -379,7 +379,7 @@ describe("queryGraph - vulnerable filter values", () => {
     // Current track-based engine: traces from every non-vulnerable node in both
     // directions, which still reaches vulnNode via publicRoot → mid → vulnNode.
     expectNodes(result,
-      "publicRoot", "privateRoot", "mid", "sideMid", "vulnNode", "rdsTail", "sqsTail"
+      "publicRoot", "privateRoot", "mid", "sideMid", "rdsTail", "sqsTail"
     );
   });
 

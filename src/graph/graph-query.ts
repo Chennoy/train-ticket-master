@@ -158,19 +158,42 @@ function filterEdgesByAllowedNodes(edges: GraphEdge[], allowedNodes: Set<string>
     return finalEdges;
 }
 
+// getAllowedNodes returns the nodes that can be tracked
+function getAllowedNodes(graph: Graph, query: GraphQuery): Set<string>  {
+    // Start with every node allowed; each filter pass narrows the allowed set to apply an AND logic
+    let currentAllowedNodes = new Set<string>(graph.nodes.map(n => n.name));
+    const nodeByName = new Map(graph.nodes.map(n => [n.name, n]));
+
+    for (const [key, def] of Object.entries(filterRegistry)) {
+        const queryParamValue = (query as Record<string, unknown>)[key]
+        if (queryParamValue === undefined){
+            continue;
+        }
+        // If the query param value is FALSE, don't allow passing though nodes that are TRUE
+        if (def.scope === "any" && queryParamValue === false) {
+            for (const name of [...currentAllowedNodes]) {
+                const node = nodeByName.get(name)!;
+                if (def.predicate(node, true)) {
+                    currentAllowedNodes.delete(name);
+                }
+            }
+        }
+    }
+
+    return currentAllowedNodes
+}
+
 // queryGraph returns a filtered graph based on the given query
 export function queryGraph(graph: Graph, query: GraphQuery): RawGraph {
     if (Object.keys(query).length === 0) {
         return graph;
     }
 
-    // Start with every node allowed; each filter pass narrows the allowed set to apply an AND logic
-    let currentAllowedNodes = new Set<string>(graph.nodes.map(n => n.name));
-
+    let currentAllowedNodes = getAllowedNodes(graph, query)
     for (const [key, def] of Object.entries(filterRegistry)) {
         const rawValue = (query as Record<string, unknown>)[key];
-        if (rawValue === undefined) { 
-            continue 
+        if (rawValue === undefined) {
+            continue
         };
 
         const candidates = candidatesForScope(graph, def.scope);
