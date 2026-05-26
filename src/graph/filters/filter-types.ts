@@ -10,9 +10,17 @@ import type { GraphNode } from "../../models/node/node-types";
  */
 export type FilterScope = "start" | "end" | "any";
 
+/**
+ * How the engine applies a filter for a given query value.
+ * - "trace":   include nodes reachable from candidates matching the predicate.
+ * - "exclude": remove matching nodes so no route can pass through them.
+ */
+export type FilterMode = "trace" | "exclude";
+
 export interface FilterDef<V = unknown> {
   readonly name: string;
   readonly scope: FilterScope;
   parse(raw: string): V;
   predicate(node: GraphNode, value: V): boolean;
+  mode?(value: V): FilterMode; // Optional
 }

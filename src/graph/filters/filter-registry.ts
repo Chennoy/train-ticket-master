@@ -21,6 +21,7 @@ const vulnerable: FilterDef<boolean> = {
   scope: "any",
   parse: (raw) => raw === "true",
   predicate: (n, v) => hasVulnerabilities(n) === v,
+  mode: (v) => (v ? "trace" : "exclude"),
 };
 
 export const filterRegistry: Record<string, FilterDef<any>> = {
