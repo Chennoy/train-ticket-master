@@ -165,22 +165,49 @@ function getAllowedNodes(graph: Graph, query: GraphQuery): Set<string>  {
     const nodeByName = new Map(graph.nodes.map(n => [n.name, n]));
 
     for (const [key, def] of Object.entries(filterRegistry)) {
-        const queryParamValue = (query as Record<string, unknown>)[key]
-        if (queryParamValue === undefined){
+        const queryParamValue = (query as Record<string, unknown>)[key];
+        if (queryParamValue === undefined || // The filter was not applied
+            def.mode?.(queryParamValue) !== "exclude"
+        ) {
             continue;
         }
-        // If the query param value is FALSE, don't allow passing though nodes that are TRUE
-        if (def.scope === "any" && queryParamValue === false) {
-            for (const name of [...currentAllowedNodes]) {
-                const node = nodeByName.get(name)!;
-                if (def.predicate(node, true)) {
-                    currentAllowedNodes.delete(name);
-                }
+        // Exclude mode
+        for (const name of [...currentAllowedNodes]) {
+            const node = nodeByName.get(name)!;
+            if (def.predicate(node, true)) {
+                currentAllowedNodes.delete(name);
             }
         }
     }
 
-    return currentAllowedNodes
+    return currentAllowedNodes;
+}
+
+// keepNodesOnCompleteRoutes returns only the nodes that lie on at least one complete route
+function keepNodesOnCompleteRoutes(
+    graph: Graph,
+    permittedNodes: Set<string>,
+): Set<string> {
+    const roots = getRootNodes(graph).filter(n => permittedNodes.has(n.name));
+    const tails = getTailNodes(graph).filter(n => permittedNodes.has(n.name));
+    if (roots.length === 0 || tails.length === 0) {
+        return new Set();
+    }
+
+    const reachableFromRoot = traceRouteDirection(
+        roots, graph, "downstream", permittedNodes,
+    ).nodes;
+    const canReachTail = traceRouteDirection(
+        tails, graph, "upstream", permittedNodes,
+    ).nodes;
+
+    const complete = new Set<string>();
+    for (const name of permittedNodes) {
+        if (reachableFromRoot.has(name) && canReachTail.has(name)) {
+            complete.add(name);
+        }
+    }
+    return complete;
 }
 
 // queryGraph returns a filtered graph based on the given query
@@ -190,11 +217,20 @@ export function queryGraph(graph: Graph, query: GraphQuery): RawGraph {
     }
 
     let currentAllowedNodes = getAllowedNodes(graph, query)
+    if (currentAllowedNodes.size === 0) {
+        return { nodes: [], edges: [] };
+    }
+
+    let hadExclusion = false;
     for (const [key, def] of Object.entries(filterRegistry)) {
         const rawValue = (query as Record<string, unknown>)[key];
-        if (rawValue === undefined) {
-            continue
-        };
+        if (rawValue === undefined) { // The filter was not applied
+            continue;
+        }
+        if (def.mode?.(rawValue) === "exclude") {
+            hadExclusion = true;
+            continue; // Exclusion mode filters were applied in getAllowedNodes
+        }
 
         const candidates = candidatesForScope(graph, def.scope);
         const directions = scopeToDirection(def.scope);
@@ -208,6 +244,13 @@ export function queryGraph(graph: Graph, query: GraphQuery): RawGraph {
 
         // Narrow the allowed nodes based on the filter
         currentAllowedNodes = result;
+    }
+
+    if (hadExclusion) {
+        currentAllowedNodes = keepNodesOnCompleteRoutes(graph, currentAllowedNodes);
+        if (currentAllowedNodes.size === 0) {
+            return { nodes: [], edges: [] };
+        }
     }
 
     return {
