@@ -213,7 +213,7 @@ function keepNodesOnCompleteRoutes(
 // queryGraph returns a filtered graph based on the given query
 export function queryGraph(graph: Graph, query: GraphQuery): RawGraph {
     if (Object.keys(query).length === 0) {
-        return graph;
+        return { nodes: graph.nodes, edges: graph.edges }
     }
 
     let currentAllowedNodes = getAllowedNodes(graph, query)
