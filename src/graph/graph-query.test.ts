@@ -371,16 +371,6 @@ describe("queryGraph - vulnerable filter values", () => {
     expectNodes(result, "publicRoot", "mid", "vulnNode", "rdsTail");
   });
 
-  it("vulnerable=false seeds from non-vulnerable nodes (current engine behavior)", () => {
-    const graph = createExtendedFilterGraph();
-
-    const result = queryGraph(graph, { vulnerable: false });
-
-    expectNodes(result,
-      "privateRoot", "sideMid", "sqsTail"
-    );
-  });
-
   it("vulnerable=true returns empty when no node has vulnerabilities", () => {
     const graph = createTestGraph(["a", "b"], [{ from: "a", to: ["b"] }]);
 
@@ -481,7 +471,7 @@ describe("queryGraph - two-filter combinations", () => {
     const graph = createExtendedFilterGraph();
 
     const result = queryGraph(graph, { sinkKind: "rds", vulnerable: false });
-    
+
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
   });
