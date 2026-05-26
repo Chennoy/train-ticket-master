@@ -118,8 +118,11 @@ describe("queryGraph - empty query fast path", () => {
 
     const result = queryGraph(graph, {});
 
-    expect(result).toBe(graph);
-    expect(result.nodes.length).toBe(4);
+    expect(result.nodes).toEqual(graph.nodes);
+    expect(result.edges).toEqual(graph.edges);
+    // API response shape: no adjacency maps
+    expect("downstreamAdjacencyMap" in result).toBe(false);
+    expect("upstreamAdjacencyMap" in result).toBe(false);
   });
 });
 
