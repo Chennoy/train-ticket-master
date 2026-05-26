@@ -20,7 +20,6 @@ export type FilterMode = "trace" | "exclude";
 export interface FilterDef<V = unknown> {
   readonly name: string;
   readonly scope: FilterScope;
-  parse(raw: string): V;
   predicate(node: GraphNode, value: V): boolean;
   mode?(value: V): FilterMode; // Optional
 }

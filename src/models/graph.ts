@@ -1,5 +1,7 @@
-import type { GraphNode, NodeKind } from "./node/node-types";
+import type { GraphNode } from "./node/node-types";
+import { NodeKind } from "./node/node-types";
 import type { GraphEdge, RawGraphEdge } from "./edge";
+import { z } from "zod";
 
 export type Graph = {
     nodes: GraphNode[];
@@ -13,8 +15,13 @@ export type RawGraph = {
     edges: RawGraphEdge[];
 };
 
-export type GraphQuery = {
-    sinkKind?: NodeKind;
-    publicExposed?: boolean;
-    vulnerable?: boolean;
-}
+const queryBoolean = z.enum(["true", "false"]).transform((v) => v === "true");
+
+export const GraphQuerySchema = z.object({
+    sinkKind: z.enum(NodeKind).optional(),
+    publicExposed: queryBoolean.optional(),
+    vulnerable: queryBoolean.optional(),
+})
+.strict(); // Reject unknown params
+
+export type GraphQuery = z.infer<typeof GraphQuerySchema>;

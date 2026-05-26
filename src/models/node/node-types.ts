@@ -7,10 +7,11 @@ export type Vulnerability = {
   };
 };
 
-export type NodeKind =
-  | "service"
-  | "rds"
-  | "sqs";
+export enum NodeKind {
+  Service = "service",
+  RDS = "rds",
+  SQS = "sqs",
+}
 
 export type GraphNode = {
   name: string;

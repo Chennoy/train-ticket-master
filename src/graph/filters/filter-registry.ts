@@ -5,21 +5,18 @@ import type { FilterDef } from "./filter-types";
 const publicExposed: FilterDef<boolean> = {
   name: "publicExposed",
   scope: "start",
-  parse: (raw) => raw === "true",
   predicate: (n, v) => isPublic(n) === v,
 };
 
 const sinkKind: FilterDef<NodeKind> = {
   name: "sinkKind",
   scope: "end",
-  parse: (raw) => raw as NodeKind,
   predicate: (n, v) => n.kind === v,
 };
 
 const vulnerable: FilterDef<boolean> = {
   name: "vulnerable",
   scope: "any",
-  parse: (raw) => raw === "true",
   predicate: (n, v) => hasVulnerabilities(n) === v,
   mode: (v) => (v ? "trace" : "exclude"),
 };

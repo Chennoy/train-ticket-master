@@ -1,20 +1,13 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
-
 import { queryGraph } from "../../graph/graph-query";
-import type { Graph, GraphQuery } from "../../models/graph";
-
-export const graphQuerySchema = z.object({
-    sinkKind: z.enum(["service", "rds", "sqs"]).optional(),
-    publicExposed: z.coerce.boolean().optional(),
-    vulnerable: z.coerce.boolean().optional(),
-});
+import { GraphQuerySchema, type Graph, type GraphQuery } from "../../models/graph";
 
 export function createGraphRouter(graph: Graph): Router {
     const router = Router();
 
     router.get("/", (req: Request, res: Response) => {
-        const parsed = graphQuerySchema.safeParse(req.query);
+        const parsed = GraphQuerySchema.safeParse(req.query);
         if (!parsed.success) {
             res.status(400).json({
                 error: "Invalid query parameters",

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { queryGraph } from "./graph-query";
 import type { Graph } from "../models/graph";
-import type { GraphNode } from "../models/node/node-types";
+import { NodeKind, type GraphNode } from "../models/node/node-types";
 
 /**
  * Builds a Graph with pre-indexed adjacency maps from a node-name list and
@@ -64,7 +64,7 @@ function createMockQueryGraph(): Graph {
     publicExposed: false,
     vulnerabilities: [{ severity: "high" }]
   });
-  Object.assign(graph.nodes[3] as any, { kind: "rds", publicExposed: false });
+  Object.assign(graph.nodes[3] as any, { kind: NodeKind.RDS, publicExposed: false });
 
   return graph;
 }
@@ -106,8 +106,8 @@ function createExtendedFilterGraph(): Graph {
     publicExposed: false,
     vulnerabilities: [{ severity: "high" }]
   });
-  Object.assign(graph.nodes.find(n => n.name === "rdsTail")!, { kind: "rds", publicExposed: false });
-  Object.assign(graph.nodes.find(n => n.name === "sqsTail")!, { kind: "sqs", publicExposed: false });
+  Object.assign(graph.nodes.find(n => n.name === "rdsTail")!, { kind: NodeKind.RDS, publicExposed: false });
+  Object.assign(graph.nodes.find(n => n.name === "sqsTail")!, { kind: NodeKind.SQS, publicExposed: false });
 
   return graph;
 }
@@ -341,7 +341,7 @@ describe("queryGraph - sinkKind filter values", () => {
   it("sinkKind=rds traces upstream from rds tails only", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { sinkKind: "rds" });
+    const result = queryGraph(graph, { sinkKind: NodeKind.RDS });
 
     expectNodes(result, "publicRoot", "mid", "vulnNode", "rdsTail");
   });
@@ -349,7 +349,7 @@ describe("queryGraph - sinkKind filter values", () => {
   it("sinkKind=sqs traces upstream from sqs tails only", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { sinkKind: "sqs" });
+    const result = queryGraph(graph, { sinkKind: NodeKind.SQS });
 
     expectNodes(result, "privateRoot", "sideMid", "sqsTail");
   });
@@ -357,7 +357,7 @@ describe("queryGraph - sinkKind filter values", () => {
   it("sinkKind with no matching tail returns empty", () => {
     const graph = createMockQueryGraph(); // only rds tail
 
-    const result = queryGraph(graph, { sinkKind: "sqs" });
+    const result = queryGraph(graph, { sinkKind: NodeKind.SQS });
 
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
@@ -396,7 +396,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("publicExposed=true + sinkKind=rds → public route ending at rds", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { publicExposed: true, sinkKind: "rds" });
+    const result = queryGraph(graph, { publicExposed: true, sinkKind: NodeKind.RDS });
 
     expectNodes(result, "publicRoot", "mid", "vulnNode", "rdsTail");
   });
@@ -404,7 +404,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("publicExposed=true + sinkKind=sqs → empty (no sqs on public branch)", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { publicExposed: true, sinkKind: "sqs" });
+    const result = queryGraph(graph, { publicExposed: true, sinkKind: NodeKind.SQS });
 
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
@@ -413,7 +413,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("publicExposed=false + sinkKind=sqs → private route ending at sqs", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { publicExposed: false, sinkKind: "sqs" });
+    const result = queryGraph(graph, { publicExposed: false, sinkKind: NodeKind.SQS });
 
     expectNodes(result, "privateRoot", "sideMid", "sqsTail");
   });
@@ -421,7 +421,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("publicExposed=false + sinkKind=rds → empty (no rds on private branch)", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { publicExposed: false, sinkKind: "rds" });
+    const result = queryGraph(graph, { publicExposed: false, sinkKind: NodeKind.RDS });
 
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
@@ -447,7 +447,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("sinkKind=rds + vulnerable=true → route to rds that passes through vuln", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { sinkKind: "rds", vulnerable: true });
+    const result = queryGraph(graph, { sinkKind: NodeKind.RDS, vulnerable: true });
 
     expectNodes(result, "publicRoot", "mid", "vulnNode", "rdsTail");
   });
@@ -455,7 +455,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("sinkKind=sqs + vulnerable=true → empty (no vuln on sqs branch)", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { sinkKind: "sqs", vulnerable: true });
+    const result = queryGraph(graph, { sinkKind: NodeKind.SQS, vulnerable: true });
 
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
@@ -473,7 +473,7 @@ describe("queryGraph - two-filter combinations", () => {
   it("sinkKind=rds + vulnerable=false returns empty when every route to rds hits a vuln", () => {
     const graph = createExtendedFilterGraph();
 
-    const result = queryGraph(graph, { sinkKind: "rds", vulnerable: false });
+    const result = queryGraph(graph, { sinkKind: NodeKind.RDS, vulnerable: false });
 
     expect(result.nodes).toEqual([]);
     expect(result.edges).toEqual([]);
@@ -486,7 +486,7 @@ describe("queryGraph - three-filter combinations", () => {
 
     const result = queryGraph(graph, {
       publicExposed: true,
-      sinkKind: "rds",
+      sinkKind: NodeKind.RDS,
       vulnerable: true
     });
 
@@ -503,12 +503,12 @@ describe("queryGraph - three-filter combinations", () => {
     );
     Object.assign(graph.nodes[0]!, { kind: "service", publicExposed: true });
     Object.assign(graph.nodes[1]!, { kind: "service", publicExposed: false });
-    Object.assign(graph.nodes[2]!, { kind: "rds", publicExposed: false });
+    Object.assign(graph.nodes[2]!, { kind: NodeKind.RDS, publicExposed: false });
     // No vulnerable node anywhere
 
     const result = queryGraph(graph, {
       publicExposed: true,
-      sinkKind: "rds",
+      sinkKind: NodeKind.RDS,
       vulnerable: true
     });
 
@@ -521,7 +521,7 @@ describe("queryGraph - three-filter combinations", () => {
 
     const result = queryGraph(graph, {
       publicExposed: false,
-      sinkKind: "sqs",
+      sinkKind: NodeKind.SQS,
       vulnerable: true
     });
 
