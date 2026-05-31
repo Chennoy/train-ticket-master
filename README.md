@@ -23,8 +23,8 @@ The query engine is **registry-driven**: each filter declares its scope, predica
 
 - The graph is **directed**. An edge `A → B` means *A invokes or depends on B* (downstream direction).
 - A **route** is a path of nodes connected by edges, in call direction `A → B → C`.
-- **Root** (start) nodes have **no incoming edges** — they never appear as another edge’s destination.
-- **Tail** (end) nodes have **no outgoing edges** — they never appear as an edge origin.
+- **Root** (start) nodes have **no incoming edges** - they never appear as another edge’s destination.
+- **Tail** (end) nodes have **no outgoing edges** - they never appear as an edge origin.
 - Cycles are allowed. Traversal tracks visited nodes and terminates naturally.
 - A node with no edges can still appear in the result if it matches the filter on its own (e.g. a vulnerable node with no connections when `vulnerable=true`).
 
@@ -56,7 +56,7 @@ The query engine is **registry-driven**: each filter declares its scope, predica
 |----------|-----------|
 | **Precomputed adjacency maps** | Tracing is O(nodes + edges) per pass; maps are built once at load time. |
 | **Separate in-memory `Graph` vs response `RawGraph`** | Keeps indexing structures server-side; API stays render-friendly. |
-| **Filter registry + `FilterDef`** | New filters are a registry entry + schema field + tests — no changes to the core loop’s structure. |
+| **Filter registry + `FilterDef`** | New filters are a registry entry + schema field + tests - no changes to the core loop’s structure. |
 | **Zod at the API boundary only** | `GraphQuerySchema` validates HTTP input; `FilterDef` handles graph semantics. No duplicate `parse()` on each filter. |
 | **`GraphQuery` inferred from schema** | Single source of truth for allowed query shape and TypeScript types. |
 | **Graph loaded from `dist/data/` in production** | `tsc` does not copy JSON; the build script copies `src/data` → `dist/data`. |
@@ -97,11 +97,11 @@ src/
 
 ### Pipeline (`queryGraph`)
 
-1. **Empty query** — return full graph as `RawGraph` (fast path).
-2. **`getAllowedNodes`** — apply all filters in **exclude** mode (remove matching nodes from the permitted set).
-3. **Trace loop** — for each active filter in **trace** mode, find candidates by scope, match predicate, trace in the configured direction(s), intersect with `currentAllowedNodes`.
-4. **Complete-route repair** — if any exclude filter ran, keep only nodes on at least one **root → tail** path within the permitted set (see below).
-5. **Materialize result** — filter node list and rebuild edges.
+1. **Empty query** - return full graph as `RawGraph` (fast path).
+2. **`getAllowedNodes`** - apply all filters in **exclude** mode (remove matching nodes from the permitted set).
+3. **Trace loop** - for each active filter in **trace** mode, find candidates by scope, match predicate, trace in the configured direction(s), intersect with `currentAllowedNodes`.
+4. **Complete-route repair** - if any exclude filter ran, keep only nodes on at least one **root → tail** path within the permitted set (see below).
+5. **Materialize result** - filter node list and rebuild edges.
 
 If any trace filter finds no matching candidates, or the allowed set becomes empty, return `{ nodes: [], edges: [] }`.
 
@@ -126,7 +126,7 @@ The **`mode` function** on a filter selects trace vs exclude based on the parsed
 
 ### Why `vulnerable=false` needs an extra step
 
-Excluding vulnerable nodes can leave **orphan tails** — nodes still in the set but no longer on a complete path (e.g. an RDS tail whose only upstream path went through a removed vuln node).
+Excluding vulnerable nodes can leave **orphan tails** - nodes still in the set but no longer on a complete path (e.g. an RDS tail whose only upstream path went through a removed vuln node).
 
 After exclusion, **`keepNodesOnCompleteRoutes`** keeps a node only if it is:
 
@@ -147,18 +147,18 @@ both within the current permitted set. This enforces: *complete routes with zero
 - **`publicExposed=true`:** seed public roots, trace downstream.
 - **`publicExposed=false`:** seed non-public roots, trace downstream.
 
-### `sinkKind` — routes ending at a specific sink kind.
+### `sinkKind` - routes ending at a specific sink kind.
 
 - **Scope:** `end`
 - **Mode:** trace
 - **Values:** `service`, `rds`, `sqs` (from `NodeKind`)
 - **`sinkKind=rds`:** seed RDS tail nodes, trace upstream.
 
-### `vulnerable` — routes involving vulnerabilities.
+### `vulnerable` - routes involving vulnerabilities.
 
 - **Scope:** `any`
-- **`vulnerable=true` (trace):** seed nodes with vulnerabilities, trace both directions — routes that **pass through** at least one vulnerable node.
-- **`vulnerable=false` (exclude):** remove all vulnerable nodes, then apply complete-route repair — routes with **no** vulnerable node on a full root→tail path.
+- **`vulnerable=true` (trace):** seed nodes with vulnerabilities, trace both directions - routes that **pass through** at least one vulnerable node.
+- **`vulnerable=false` (exclude):** remove all vulnerable nodes, then apply complete-route repair - routes with **no** vulnerable node on a full root→tail path.
 
 ---
 
@@ -200,7 +200,7 @@ curl "http://localhost:3000/api/v1/graph?publicExposed=true&sinkKind=rds&vulnera
 
 ## Extensibility: adding a filter
 
-1. **Registry** — add a `FilterDef` in `src/graph/filters/filter-registry.ts`:
+1. **Registry** - add a `FilterDef` in `src/graph/filters/filter-registry.ts`:
 
    ```typescript
    const myFilter: FilterDef<string> = {
@@ -211,9 +211,9 @@ curl "http://localhost:3000/api/v1/graph?publicExposed=true&sinkKind=rds&vulnera
    };
    ```
 
-2. **Schema** — add the field to `GraphQuerySchema` in `src/models/graph.ts` (type inference updates `GraphQuery` automatically).
+2. **Schema** - add the field to `GraphQuerySchema` in `src/models/graph.ts` (type inference updates `GraphQuery` automatically).
 
-3. **Tests** — add cases in `src/graph/graph-query.test.ts` for single-filter behavior and combinations with existing filters.
+3. **Tests** - add cases in `src/graph/graph-query.test.ts` for single-filter behavior and combinations with existing filters.
 
 No changes to `queryGraph`’s control flow are required.
 
@@ -235,8 +235,15 @@ Requires Node.js 18+.
 
 ## Known limitations
 
-- **Single graph file** — path is fixed relative to compiled output; no hot reload of data without restart.
-- **No authentication or rate limiting** — out of assignment scope.
+- **Single graph file** - path is fixed relative to compiled output; no hot reload of data without restart.
+- **No authentication or rate limiting** - out of assignment scope.
+
+---
+
+## Future work
+
+- For heavier graphs, investigate alternatives to loading the full JSON into memory (chunked loading, external storage with indexed lookups, querying a dedicated graph store instead of a single in-process structure).
+- Add an export endpoint that returns the filtered subgraph in a standard visualization format (e.g. Mermaid flowchart syntax) for easy rendering in docs and dashboards.
 
 ---
 
